@@ -161,12 +161,15 @@ def _build_cache_config(conf):
     # does not need the explicit flush_on_reconnect
     conf_dict.setdefault('%s.arguments.url' % prefix,
                          conf.cache.memcache_servers)
-    for arg in ('dead_retry', 'socket_timeout', 'pool_maxsize',
-                'pool_unused_timeout', 'pool_connection_get_timeout',
-                'pool_flush_on_reconnect', 'sasl_enabled', 'username',
-                'password'):
-        value = getattr(conf.cache, 'memcache_' + arg)
-        conf_dict['%s.arguments.%s' % (prefix, arg)] = value
+
+    # This removes username and password that are needed for redis_sentinel backend
+    if conf.cache.backend != "oslo_cache.redis_sentinel":
+        for arg in ('dead_retry', 'socket_timeout', 'pool_maxsize',
+                    'pool_unused_timeout', 'pool_connection_get_timeout',
+                    'pool_flush_on_reconnect', 'sasl_enabled', 'username',
+                    'password'):
+            value = getattr(conf.cache, 'memcache_' + arg)
+            conf_dict['%s.arguments.%s' % (prefix, arg)] = value
 
     if conf.cache.tls_enabled:
         _LOG.debug('Oslo Cache TLS - CA: %s', conf.cache.tls_cafile)
@@ -236,7 +239,6 @@ def _build_cache_config(conf):
             conf.cache.hashclient_retry_delay
         conf_dict['%s.arguments.dead_timeout' % prefix] = \
             conf.cache.dead_timeout
-
     return conf_dict
 
 
